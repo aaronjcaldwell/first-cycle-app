@@ -11,6 +11,10 @@
 *.tar
 *.zip
 
+# Build #
+############
+build/
+
 # Logs and databases #
 ######################
 *.log
