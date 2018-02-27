@@ -2,22 +2,27 @@ import xs from 'xstream';
 import { run } from '@cycle/run';
 import { div, input, h2, makeDOMDriver } from '@cycle/dom';
 
-function renderWeightSlider(weight) {
+function renderSlider(label, value, unit, min, max) {
   return div([
-    'Weight ' + weight + 'kg',
+    `${label} ${value}${unit}`,
     input('.weight', {
-      attrs: {type: 'range', min: 40, max: 140, value: weight}
+      attrs: {type: 'range', min, max, value}
     })
   ]);
 }
 
+function renderWeightSlider(weight) {
+  return renderSlider('Weight', weight, 'kg', 'weight', 40, 140);
+}
+
 function renderHeightSlider(height) {
-  return div([
-    'Height ' + height + 'cm',
-    input('.height', {
-      attrs: {type: 'range', min: 140, max: 210, value: height}
-    })
-  ]);
+  return renderSlider('Height', height, 'cm', 'height', 140, 210);
+}
+
+function getSliderEvent(domSource, className) {
+  return domSource.select(`.${className}`)
+    .events('input')
+    .map(ev => ev.target.value)
 }
 
 function bmi(weight, height) {
@@ -28,12 +33,8 @@ function bmi(weight, height) {
 // Interpret dom events (user's intents) into actions
 function intent(domSource) {
   return {
-    changeWeight$: domSource.select('.weight')
-      .events('input')
-      .map(ev => ev.target.value),
-    changeHeight$: domSource.select('.height')
-      .events('input')
-      .map(ev => ev.target.value)
+    changeWeight$: getSliderEvent(domSource, 'weight'),
+    changeHeight$: getSliderEvent(domSource, 'height')
   }
 }
 
@@ -59,7 +60,6 @@ function view(state$) {
     ])
   );
 }
-
 
 // Analogous to 'computer' function, readable side effects
 function main(sources) { // 'sources' are like user event streams
