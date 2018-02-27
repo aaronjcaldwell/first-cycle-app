@@ -25,7 +25,31 @@ function bmi(weight, height) {
   return Math.round(weight / (heightMeters * heightMeters));
 }
 
-  // State gets mapped to display
+// Interpret dom events (user's intents) into actions
+function intent(domSource) {
+  return {
+    changeWeight$: domSource.select('.weight')
+      .events('input')
+      .map(ev => ev.target.value),
+    changeHeight$: domSource.select('.height')
+      .events('input')
+      .map(ev => ev.target.value)
+  }
+}
+
+// Given action streams, output state stream
+function model(actions) {
+  const weight$ = actions.changeWeight$.startWith(70);
+  const height$ = actions.changeHeight$.startWith(170);
+
+  // State is an object (in this case) stream
+  return xs.combine(weight$, height$)
+    .map(([weight, height]) => {
+      return {weight, height, bmi: bmi(weight, height)};
+    });
+}
+
+// Given state stream, visually represent state
 function view(state$) {
   return state$.map(({weight, height, bmi}) =>
     div([
@@ -39,23 +63,8 @@ function view(state$) {
 
 // Analogous to 'computer' function, readable side effects
 function main(sources) { // 'sources' are like user event streams
-
-  const weight$ = sources.DOM.select('.weight')
-    .events('input')
-    .map(ev => ev.target.value)
-    .startWith(70);
-
-  const height$ = sources.DOM.select('.height')
-    .events('input')
-    .map(ev => ev.target.value)
-    .startWith(170);
-
-  // State is an object (in this case) stream
-  const state$ = xs.combine(weight$, height$)
-    .map(([weight, height]) => {
-      return {weight, height, bmi: bmi(weight, height)};
-    });
-  
+  const actions = intent(sources.DOM);
+  const state$ = model(actions);
   const vdom$ = view(state$);
 
   // Instructions to drivers to perform side effects
