@@ -2,6 +2,29 @@ import xs from 'xstream';
 import { run } from '@cycle/run';
 import { div, input, h2, makeDOMDriver } from '@cycle/dom';
 
+function renderWeightSlider(weight) {
+  return div([
+    'Weight ' + weight + 'kg',
+    input('.weight', {
+      attrs: {type: 'range', min: 40, max: 140, value: weight}
+    })
+  ]);
+}
+
+function renderHeightSlider(height) {
+  return div([
+    'Height ' + height + 'cm',
+    input('.height', {
+      attrs: {type: 'range', min: 140, max: 210, value: height}
+    })
+  ]);
+}
+
+function bmi(weight, height) {
+  const heightMeters = height * 0.01;
+  return Math.round(weight / (heightMeters * heightMeters));
+}
+
 // Analogous to 'computer' function, readable side effects
 function main(sources) { // 'sources' are like user event streams
 
@@ -18,26 +41,14 @@ function main(sources) { // 'sources' are like user event streams
   // State is an object (in this case) stream
   const state$ = xs.combine(weight$, height$)
     .map(([weight, height]) => {
-      const heightMeters = height * 0.01;
-      const bmi = Math.round(weight / (heightMeters * heightMeters));
-      return {weight, height, bmi};
+      return {weight, height, bmi: bmi(height, weight)};
     });
   
   // State gets mapped to display
   const vdom$ = state$.map(({weight, height, bmi}) =>
     div([
-      div([
-        'Weight ' + weight + 'kg',
-        input('.weight', {
-          attrs: {type: 'range', min: 40, max: 140, value: weight}
-        })
-      ]),
-      div([
-        'Height ' + height + 'cm',
-        input('.height', {
-          attrs: {type: 'range', min: 140, max: 210, value: height}
-        })
-      ]),
+      renderWeightSlider(weight),
+      renderHeightSlider(height),
       h2('BMI is ' + bmi)
     ])
   );
