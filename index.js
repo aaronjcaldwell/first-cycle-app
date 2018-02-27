@@ -25,6 +25,18 @@ function bmi(weight, height) {
   return Math.round(weight / (heightMeters * heightMeters));
 }
 
+  // State gets mapped to display
+function view(state$) {
+  return state$.map(({weight, height, bmi}) =>
+    div([
+      renderWeightSlider(weight),
+      renderHeightSlider(height),
+      h2('BMI is ' + bmi)
+    ])
+  );
+}
+
+
 // Analogous to 'computer' function, readable side effects
 function main(sources) { // 'sources' are like user event streams
 
@@ -41,17 +53,10 @@ function main(sources) { // 'sources' are like user event streams
   // State is an object (in this case) stream
   const state$ = xs.combine(weight$, height$)
     .map(([weight, height]) => {
-      return {weight, height, bmi: bmi(height, weight)};
+      return {weight, height, bmi: bmi(weight, height)};
     });
   
-  // State gets mapped to display
-  const vdom$ = state$.map(({weight, height, bmi}) =>
-    div([
-      renderWeightSlider(weight),
-      renderHeightSlider(height),
-      h2('BMI is ' + bmi)
-    ])
-  );
+  const vdom$ = view(state$);
 
   // Instructions to drivers to perform side effects
   return {
